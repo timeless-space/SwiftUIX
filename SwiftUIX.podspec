@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "SwiftUIX"
-  s.version      = "0.0.5"
+  s.version      = "0.0.5-t1"
   s.summary      = "Timeless fork of SwiftUIX"
 
   s.description  = <<-DESC
