@@ -124,17 +124,34 @@ extension EnvironmentValues {
 }
 
 struct _SetAppKitOrUIKitViewControllerEnvironmentValue: ViewModifier {
-    @State var _appKitOrUIKitViewController: AppKitOrUIKitViewController?
-    
+    @State var _appKitOrUIKitViewController: AppKitOrUIKitViewControllerWeakReference?
+
+    class AppKitOrUIKitViewControllerWeakReference {
+        private(set) weak var wrappedValue: AppKitOrUIKitViewController?
+
+        @inlinable
+        required init(_ _appKitOrUIKitViewController: AppKitOrUIKitViewController?) {
+            self.wrappedValue = _appKitOrUIKitViewController
+        }
+
+        @inlinable
+        static func wrap(_ viewController: AppKitOrUIKitViewController?) -> Self {
+            return Self(viewController)
+        }
+    }
+
     func body(content: Content) -> some View {
         #if os(iOS) || os(tvOS) || targetEnvironment(macCatalyst)
         return content
-            .environment(\._appKitOrUIKitViewController, _appKitOrUIKitViewController)
-            .environment(\.navigator, _appKitOrUIKitViewController?.navigationController)
+            .environment(\._appKitOrUIKitViewController, _appKitOrUIKitViewController?.wrappedValue)
+            .environment(\.navigator, _appKitOrUIKitViewController?.wrappedValue?.navigationController)
             .onUIViewControllerResolution {
-                if !(self._appKitOrUIKitViewController === $0) {
-                    self._appKitOrUIKitViewController = $0
+                if !(_appKitOrUIKitViewController?.wrappedValue === $0) {
+                    _appKitOrUIKitViewController = .wrap($0)
                 }
+            }
+            .onDisappear {
+                _appKitOrUIKitViewController = nil
             }
         #else
         return content
